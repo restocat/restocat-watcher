@@ -1,0 +1,51 @@
+{
+  "name": "restocat-watcher",
+  "version": "1.0.0",
+  "author": {
+    "name": "Maksim Chetverikov",
+    "email": "ma.chetverikov@gmail.com"
+  },
+  "homepage": "https://github.com/restocat/restocat-watcher",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/restocat/restocat-watcher"
+  },
+  "bugs": {
+    "url": "https://github.com/restocat/restocat-watcher/issues",
+    "email": "ma.chetverikov@gmail.com"
+  },
+  "description": "Watcher for restocat",
+  "license": "MIT",
+  "contributors": [
+    {
+      "name": "Maksim Chetverikov",
+      "email": "ma.chetverikov@gmail.com"
+    }
+  ],
+  "scripts": {
+    "test": "make"
+  },
+  "dependencies": {
+    "chokidar": "^1.7.0",
+    "bluebird": "^3.5.1",
+    "catberry-locator": "^2.2.1"
+  },
+  "devDependencies": {
+    "fs-extra": "^4.0.2",
+    "codecov": "^3.0.0",
+    "eslint": "^4.10.0",
+    "istanbul": "^1.1.0-alpha.1",
+    "mocha": "^4.0.1"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "main": "lib/Restocat.js",
+  "keywords": [
+    "restocat",
+    "watcher",
+    "fs",
+    "fs-events",
+    "restocat-plugin"
+  ]
+}
