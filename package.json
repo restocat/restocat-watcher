@@ -23,7 +23,12 @@
     }
   ],
   "scripts": {
-    "test": "make"
+    "test": "mocha test/lib/*.js test/lib/**/*.js test/together.js",
+    "test-cov": "istanbul cover _mocha -- test/lib/*.js test/lib/**/*.js test/together.js",
+    "lint": "eslint lib/**/*.js test/lib/*.js test/lib/**/*.js test/together.js",
+    "lint-fix": "eslint lib/**/*.js test/lib/*.js test/lib/**/*.js test/together.js --fix",
+    "travis": "istanbul cover _mocha --report lcovonly -- test/lib/*.js test/lib/**/*.js test/together.js --recursive -R spec && codecov",
+    "clean": "rm -rf coverage"
   },
   "dependencies": {
     "chokidar": "^1.7.0",
@@ -31,6 +36,7 @@
     "catberry-locator": "^2.2.1"
   },
   "devDependencies": {
+    "restocat": "restocat/restocat#develop",
     "fs-extra": "^4.0.2",
     "codecov": "^3.0.0",
     "eslint": "^4.10.0",
