@@ -42,7 +42,7 @@ describe('lib/Watcher', () => {
     locator.registerInstance('config', {
       isRelease: false,
       collectionsGlob: [
-        'test/cases/lib/finders/CollectionsFinder/watch/**/test-collection.json'
+        'test/cases/watch/**/test-collection.json'
       ]
     });
 
@@ -78,7 +78,7 @@ describe('lib/Watcher', () => {
      * Watcher emit unlink, add
      */
     it('should recreate collection after change collection.json', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
 
@@ -120,7 +120,7 @@ describe('lib/Watcher', () => {
      * Watcher emit unlink, add
      */
     it('should reinitialization routes after change collection.json', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
       let reinit = false;
@@ -169,9 +169,9 @@ describe('lib/Watcher', () => {
      * Watcher emit add
      */
     it('should add new collection', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
-      const anotherCollection = 'test/cases/lib/finders/CollectionsFinder/collections/test1/test2';
+      const anotherCollection = 'test/cases/collections/test1/test2';
       const fullPathNew = path.join(tmpPath, 'newCollection');
 
       locator.registerInstance('config', {
@@ -212,9 +212,9 @@ describe('lib/Watcher', () => {
      * Watcher emit warn to global event bus
      */
     it('skip collection with equal name', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
-      const anotherCollection = 'test/cases/lib/finders/CollectionsFinder/collections/test1/test2';
+      const anotherCollection = 'test/cases/collections/test1/test2';
       const fullPathNew = path.join(tmpPath, 'newCollection');
       const fullPathNewDuplicate = path.join(tmpPath, 'newCollectionDuplicate');
 
@@ -269,7 +269,7 @@ describe('lib/Watcher', () => {
     });
 
     it('skip collection with invalid collection.json', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
       const events = locator.resolve('events');
@@ -330,7 +330,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should emit "change" collection after change "collection/index.js and re-init Router"', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
       let RequestRouter = null;
@@ -384,7 +384,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should emit "change" collection after add file to collection', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const anotherPath = path.join(tmpPath, 'already', 'AnotherForAlready.js');
       const copyPath = path.join(tmpPath, 'customs', 'AnotherForAlready.js');
@@ -429,7 +429,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should emit "unlink" collection after remove logic file', () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
 
@@ -486,7 +486,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should start watch', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
 
       locator.registerInstance('config', {
         collectionsGlob: [
@@ -514,9 +514,9 @@ describe('lib/Watcher', () => {
     });
 
     it('should add new collection and load', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
-      const anotherCollection = 'test/cases/lib/finders/CollectionsFinder/collections/test1/test2';
+      const anotherCollection = 'test/cases/collections/test1/test2';
       const fullPathNew = path.join(tmpPath, 'newCollection');
 
       locator.registerInstance('config', {
@@ -568,7 +568,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should reload collection on change in logic file', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
 
@@ -614,7 +614,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should reload collection on change in collection.json', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
 
@@ -657,7 +657,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should remove collection on unlink collection.json', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
 
@@ -697,7 +697,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should skip collection on invalid change in collection.json', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
 
@@ -734,7 +734,7 @@ describe('lib/Watcher', () => {
     });
 
     it('should skip collection on invalid change in logic file', async () => {
-      const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
+      const caseRoot = 'test/cases/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
 
