@@ -15,15 +15,22 @@ const copy = fs.copy;
 const remove = fs.remove;
 const writeFile = fs.writeFile;
 
-// Sometimes the promise is resolved before fs is ready
-const copyWithDelay = (from, to, delay = 20) => copy(from, to).then(() => utils.wait(delay));
-
 /* eslint prefer-arrow-callback:0 */
 /* eslint max-nested-callbacks:0 */
 /* eslint require-jsdoc:0 */
 /* eslint no-sync: 0 */
 /* eslint no-underscore-dangle: 0 */
 describe('lib/Watcher', () => {
+
+  let tmpFolder;
+
+  afterEach(async () => {
+    if (tmpFolder) {
+      try {
+        remove(tmpFolder);
+      } catch (e) {}
+    }
+  });
 
   it('#initialization', async () => {
     const locator = new ServiceLocator();
@@ -70,7 +77,7 @@ describe('lib/Watcher', () => {
     /**
      * Watcher emit unlink, add
      */
-    it.only('should recreate collection after change collection.json', async () => {
+    it('should recreate collection after change collection.json', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
@@ -82,6 +89,8 @@ describe('lib/Watcher', () => {
         ]
       });
 
+      let collections;
+
       const watcher = locator.resolve('watcher');
       const finder = locator.resolve('collectionsFinder');
       const promiseUnlink = new Promise(resolve => watcher.on('unlink', resolve));
@@ -92,11 +101,11 @@ describe('lib/Watcher', () => {
         });
       });
 
-      await copyWithDelay(caseRoot, tmpPath);
+      await copy(caseRoot, tmpPath);
 
-      const found = finder.find();
+      collections = await finder.find();
 
-      assert.equal(Object.keys(found).length, 1);
+      assert.equal(Object.keys(collections).length, 1);
 
       const jsonWatcher = await watcher.watchCollectionJsonFiles();
       const collectionJsonContent = JSON.parse(await fs.readFile(alreadyPath));
@@ -105,7 +114,6 @@ describe('lib/Watcher', () => {
 
       await Promise.all([writeFile(alreadyPath, JSON.stringify(collectionJsonContent)), promiseAdd, promiseUnlink]);
       await jsonWatcher.close();
-      await remove(tmpPath);
     });
 
     /**
@@ -138,7 +146,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -182,7 +190,7 @@ describe('lib/Watcher', () => {
       const watcher = locator.resolve('watcher');
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -200,7 +208,7 @@ describe('lib/Watcher', () => {
             });
           });
 
-          return Promise.all([copyWithDelay(anotherCollection, fullPathNew), promise]);
+          return Promise.all([copy(anotherCollection, fullPathNew), promise]);
         })
         .then(data => assert.equal(Object.keys(data[1]).length, 2))
         .then(() => remove(tmpPath))
@@ -231,7 +239,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -256,8 +264,8 @@ describe('lib/Watcher', () => {
             .then(() => finder.find().then(collections => assert.equal(Object.keys(collections).length, 2)));
 
           return Promise.all([
-            copyWithDelay(anotherCollection, fullPathNew),
-            copyWithDelay(anotherCollection, fullPathNewDuplicate),
+            copy(anotherCollection, fullPathNew),
+            copy(anotherCollection, fullPathNewDuplicate),
             promise
           ]);
 
@@ -300,7 +308,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -359,7 +367,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -413,7 +421,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => utils.wait(200))
         .then(() => finder.find())
         .then(found => {
@@ -437,7 +445,7 @@ describe('lib/Watcher', () => {
             });
           });
 
-          return Promise.all([copyWithDelay(copyPath, anotherPath), promise]);
+          return Promise.all([copy(copyPath, anotherPath), promise]);
         })
         .then(() => remove(tmpPath))
         .catch(reason => {
@@ -462,7 +470,7 @@ describe('lib/Watcher', () => {
 
       let collections;
 
-      return copyWithDelay(caseRoot, tmpPath)
+      return copy(caseRoot, tmpPath)
         .then(() => finder.find())
         .then(found => {
           collections = found;
@@ -508,7 +516,7 @@ describe('lib/Watcher', () => {
       locator.register('watcher', Watcher, true);
     });
 
-    it('should start watch', done => {
+    it('should start watch', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
 
       locator.registerInstance('config', {
@@ -519,19 +527,24 @@ describe('lib/Watcher', () => {
 
       const events = locator.resolve('events');
 
-      events.on('error', done);
-      events.on('readyWatchers', watchers => {
-        watchers.forEach(watcher => watcher.close());
-        done();
+      const promise = new Promise((resolve, reject) => {
+        events.on('error', reject);
+        events.on('readyWatchers', watchers => {
+          watchers.forEach(watcher => watcher.close());
+          resolve();
+        });
       });
 
-      locator.resolve('watcher');
+      const watcher = locator.resolve('watcher');
       const loader = locator.resolve('collectionsLoader');
 
-      loader.load();
+      await loader.load();
+      await watcher.watchCollections();
+
+      return promise;
     });
 
-    it('should add new collection and load', () => {
+    it('should add new collection and load', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const anotherCollection = 'test/cases/lib/finders/CollectionsFinder/collections/test1/test2';
@@ -542,9 +555,9 @@ describe('lib/Watcher', () => {
       });
 
       const loader = locator.resolve('collectionsLoader');
-      locator.resolve('watcher');
+      const watcher = locator.resolve('watcher');
       const events = locator.resolve('events');
-      let collections, watchers;
+      let watchers;
 
       const onCollectionsLoaded = new Promise(resolve => events.on('allCollectionsLoaded', resolve));
       const onReadyWatchers = new Promise(resolve => {
@@ -554,37 +567,38 @@ describe('lib/Watcher', () => {
         });
       });
 
-      return copyWithDelay(caseRoot, tmpPath)
-        .then(() => Promise.all([loader.load(), onReadyWatchers]))
-        .then(() => onCollectionsLoaded)
-        .then(loaded => {
-          assert.equal(Object.keys(loaded).length, 1);
+      await copy(caseRoot, tmpPath);
+      await loader.load();
+      await watcher.watchCollections();
+      await onReadyWatchers;
 
-          const promise = new Promise((resolve, reject) => {
-            events.on('collectionLoaded', collection => {
-              if (collection.name !== 'cool') {
-                return;
-              }
-              watchers.forEach(watcher => watcher.close());
-              try {
-                assert.equal(Object.keys(loader.getCollectionsByNames()).length, 2);
-                resolve();
-              } catch (e) {
-                reject(e);
-              }
-            });
-          });
+      const loaded = await onCollectionsLoaded;
 
-          return Promise.all([copyWithDelay(anotherCollection, fullPathNew), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
+      assert.equal(Object.keys(loaded).length, 1);
+
+      const promise = new Promise((resolve, reject) => {
+        events.on('collectionLoaded', collection => {
+          if (collection.name !== 'cool') {
+            return;
+          }
+          watchers.forEach(watcher => watcher.close());
+          try {
+            assert.equal(Object.keys(loader.getCollectionsByNames()).length, 2);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
+      });
+
+      await copy(anotherCollection, fullPathNew);
+      await promise;
+      await remove(tmpPath)
+
+      // fs.removeSync(tmpPath); - need remove always temporary files
     });
 
-    it('should reload collection on change in logic file', () => {
+    it('should reload collection on change in logic file', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
@@ -600,42 +614,37 @@ describe('lib/Watcher', () => {
       const onWatchReady = new Promise(resolve => events.on('readyWatchers', resolve));
       const changePromise = new Promise(resolve => watcher.on('change', resolve));
 
-      return copyWithDelay(caseRoot, tmpPath)
-        .then(() => utils.wait(20))
-        .then(() => loader.load())
-        .then(() => onWatchReady)
-        .then(watchers => {
-          const promise = new Promise((resolve, reject) => {
-            events.on('collectionLoaded', collection => {
-              if (collection.name !== 'already') {
-                return;
-              }
+      await copy(caseRoot, tmpPath);
+      await utils.wait(20);
+      await loader.load();
+      await watcher.watchCollections();
+      const watchers = await onWatchReady;
 
-              try {
-                const instance = new collection.constructor();
-                assert.equal(instance.foo(), 'foo');
+      const promise = new Promise((resolve, reject) => {
+        events.on('collectionLoaded', collection => {
+          if (collection.name !== 'already') {
+            return;
+          }
 
-                watchers.forEach(watcher => watcher.close());
-                resolve();
-              } catch (e) {
-                reject(e);
-              }
-            });
-          });
+          try {
+            const instance = new collection.constructor();
+            assert.equal(instance.foo(), 'foo');
 
-          let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
-          collectionJsonContent = collectionJsonContent.replace(/blablabla/, 'foo');
-
-          return Promise.all([writeFile(alreadyPath, collectionJsonContent), promise, changePromise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
+            watchers.forEach(watcher => watcher.close());
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
+      });
+
+      let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
+      collectionJsonContent = collectionJsonContent.replace(/blablabla/, 'foo');
+
+      await Promise.all([writeFile(alreadyPath, collectionJsonContent), promise, changePromise]);
     });
 
-    it('should reload collection on change in collection.json', () => {
+    it('should reload collection on change in collection.json', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
@@ -650,40 +659,35 @@ describe('lib/Watcher', () => {
 
       const onWatchReady = new Promise(resolve => events.on('readyWatchers', resolve));
 
-      return copyWithDelay(caseRoot, tmpPath)
-        .then(utils.wait(30))
-        .then(() => loader.load())
-        .then(() => onWatchReady)
-        .then(watchers => {
-          const promise = new Promise((resolve, reject) => {
-            events.on('collectionLoaded', collection => {
-              if (collection.name !== 'already') {
-                return;
-              }
+      await copy(caseRoot, tmpPath);
+      await utils.wait(30);
+      await loader.load();
+      await watcher.watchCollections();
+      const watchers = await onWatchReady;
 
-              try {
-                watchers.forEach(watcher => watcher.close());
-                assert.equal(collection.properties.additional, 'foo');
-                resolve();
-              } catch (e) {
-                reject(e);
-              }
-            });
-          });
+      const promise = new Promise((resolve, reject) => {
+        events.on('collectionLoaded', collection => {
+          if (collection.name !== 'already') {
+            return;
+          }
 
-          let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
-          collectionJsonContent = collectionJsonContent.replace(/some2/, 'foo');
-
-          return Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
+          try {
+            watchers.forEach(watcher => watcher.close());
+            assert.equal(collection.properties.additional, 'foo');
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
+      });
+
+      let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
+      collectionJsonContent = collectionJsonContent.replace(/some2/, 'foo');
+
+      await Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
     });
 
-    it('should remove collection on unlink collection.json', () => {
+    it('should remove collection on unlink collection.json', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
@@ -698,37 +702,32 @@ describe('lib/Watcher', () => {
 
       const onWatchReady = new Promise(resolve => events.on('readyWatchers', resolve));
 
-      return copyWithDelay(caseRoot, tmpPath)
-        .then(utils.wait(30))
-        .then(() => loader.load())
-        .then(() => onWatchReady)
-        .then(watchers => {
-          const promise = new Promise((resolve, reject) => {
-            watcher.on('unlink', collection => {
-              if (collection.name !== 'already') {
-                return;
-              }
+      await copy(caseRoot, tmpPath);
+      await utils.wait(30);
+      await loader.load();
+      await watcher.watchCollections();
+      const watchers = await onWatchReady;
 
-              try {
-                watchers.forEach(watcher => watcher.close());
-                assert.equal(Object.keys(loader._loadedCollections).length, 0);
-                resolve();
-              } catch (e) {
-                reject(e);
-              }
-            });
-          });
+      const promise = new Promise((resolve, reject) => {
+        watcher.on('unlink', collection => {
+          if (collection.name !== 'already') {
+            return;
+          }
 
-          return Promise.all([remove(alreadyPath), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
+          try {
+            watchers.forEach(watcher => watcher.close());
+            assert.equal(Object.keys(loader._loadedCollections).length, 0);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
         });
+      });
+
+      await Promise.all([remove(alreadyPath), promise]);
     });
 
-    it('should skip collection on invalid change in collection.json', () => {
+    it('should skip collection on invalid change in collection.json', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'test-collection.json');
@@ -747,29 +746,25 @@ describe('lib/Watcher', () => {
         resolve();
       }));
 
-      return copyWithDelay(caseRoot, tmpPath, 50)
-        .then(() => loader.load())
-        .then(() => onWatchReady)
-        .then(watchers => {
-          const onChange = new Promise(resolve => watchers[0].on('change', () => resolve()));
-          const promise = onChange
-            .then(() => onError)
-            .then(() => assert.equal(Object.keys(loader._loadedCollections).length, 0))
-            .then(() => watchers.forEach(watcher => watcher.close()));
+      await copy(caseRoot, tmpPath, 50);
+      await loader.load();
+      await watcher.watchCollections();
 
-          let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
-          collectionJsonContent = collectionJsonContent.replace(/"/, '\'');
+      const watchers = await onWatchReady;
+      const onChange = new Promise(resolve => watchers[0].on('change', () => resolve()));
+      const promise = onChange
+        .then(() => onError)
+        .then(() => assert.equal(Object.keys(loader._loadedCollections).length, 0))
+        .then(() => watchers.forEach(watcher => watcher.close()));
 
-          return Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
-        });
+      let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
+      collectionJsonContent = collectionJsonContent.replace(/"/, '\'');
+
+      await Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
+
     });
 
-    it('should skip collection on invalid change in logic file', () => {
+    it('should skip collection on invalid change in logic file', async () => {
       const caseRoot = 'test/cases/lib/finders/CollectionsFinder/watch';
       const tmpPath = getTemporary(caseRoot);
       const alreadyPath = path.join(tmpPath, 'already', 'index.js');
@@ -789,35 +784,33 @@ describe('lib/Watcher', () => {
         resolve();
       }));
 
-      return copyWithDelay(caseRoot, tmpPath)
-        .then(() => loader.load())
-        .then(() => onWatchReady)
-        .then(watchers => {
-          const promise = onError.then(() => {
-            watchers.forEach(watcher => watcher.close());
-          });
+      await copy(caseRoot, tmpPath);
+      await loader.load();
+      await watcher.watchCollections();
 
-          let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
-          collectionJsonContent = collectionJsonContent.replace(/{/, '\'');
+      const watchers = await onWatchReady;
+      const promise = onError.then(() => {
+        watchers.forEach(watcher => watcher.close());
+      });
 
-          return Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
-        });
+      let collectionJsonContent = fs.readFileSync(alreadyPath).toString();
+      collectionJsonContent = collectionJsonContent.replace(/{/, '\'');
+
+      await Promise.all([writeFile(alreadyPath, collectionJsonContent), promise]);
     });
   });
-});
 
-/**
- * Path temporary folder
- *
- * @param {String} root Base path
- * @returns {String} path of temporary folder
- */
-function getTemporary(root) {
-  const rand = Math.floor(Math.random() * (100 - 1 + 1)) + 1;
-  return path.normalize(path.join(root, `../__tmp__${Date.now()}__${rand}`));
-}
+  /**
+   * Path temporary folder
+   *
+   * @param {String} root Base path
+   * @returns {String} path of temporary folder
+   */
+  function getTemporary(root) {
+    const rand = Math.floor(Math.random() * (100 - 1 + 1)) + 1;
+
+    tmpFolder = path.normalize(path.join(root, `../__tmp__${Date.now()}__${rand}`));
+
+    return tmpFolder;
+  }
+});
