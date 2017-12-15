@@ -162,11 +162,6 @@ describe('lib/Watcher', () => {
           return Promise
             .all([writeFile(alreadyPath, JSON.stringify(collectionJsonContent)), promiseAdd, promiseUnlink])
             .then(() => jsonWatcher.close());
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
         });
     });
 
@@ -210,12 +205,7 @@ describe('lib/Watcher', () => {
 
           return Promise.all([copy(anotherCollection, fullPathNew), promise]);
         })
-        .then(data => assert.equal(Object.keys(data[1]).length, 2))
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
-        });
+        .then(data => assert.equal(Object.keys(data[1]).length, 2));
     });
 
     /**
@@ -270,7 +260,6 @@ describe('lib/Watcher', () => {
           ]);
 
         })
-        .then(() => remove(tmpPath))
         .catch(reason => {
           fs.removeSync(fullPathNew);
           fs.removeSync(fullPathNewDuplicate);
@@ -324,11 +313,6 @@ describe('lib/Watcher', () => {
           return Promise
             .all([writeFile(alreadyPath, collectionJsonContent), promiseError])
             .then(() => jsonWatcher.close());
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
         });
     });
   });
@@ -396,11 +380,6 @@ describe('lib/Watcher', () => {
           collectionJsonContent = collectionJsonContent.replace(/blablabla/, 'foo');
 
           return Promise.all([writeFile(alreadyPath, collectionJsonContent), promise, reinitPromise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
         });
     });
 
@@ -446,11 +425,6 @@ describe('lib/Watcher', () => {
           });
 
           return Promise.all([copy(copyPath, anotherPath), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
         });
     });
 
@@ -494,11 +468,6 @@ describe('lib/Watcher', () => {
             .then(found => assert.equal(Object.keys(collections).length, 0));
 
           return Promise.all([remove(alreadyPath), promise]);
-        })
-        .then(() => remove(tmpPath))
-        .catch(reason => {
-          fs.removeSync(tmpPath);
-          throw reason;
         });
     });
   });
