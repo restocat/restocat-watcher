@@ -23,7 +23,12 @@
     }
   ],
   "scripts": {
-    "test": "make"
+    "test": "mocha test/lib/*.js",
+    "test-cov": "istanbul cover _mocha -- test/lib/*.js",
+    "lint": "eslint lib/**/*.js test/lib/*.js",
+    "lint-fix": "eslint lib/**/*.js test/lib/*.js --fix",
+    "travis": "istanbul cover _mocha --report lcovonly -- test/lib/*.js --recursive -R spec && codecov",
+    "clean": "rm -rf coverage"
   },
   "dependencies": {
     "chokidar": "^1.7.0",
@@ -31,6 +36,7 @@
     "catberry-locator": "^2.2.1"
   },
   "devDependencies": {
+    "restocat": "^3.0.0",
     "fs-extra": "^4.0.2",
     "codecov": "^3.0.0",
     "eslint": "^4.10.0",
@@ -40,7 +46,7 @@
   "engines": {
     "node": ">=8"
   },
-  "main": "lib/Restocat.js",
+  "main": "lib/Watcher.js",
   "keywords": [
     "restocat",
     "watcher",
