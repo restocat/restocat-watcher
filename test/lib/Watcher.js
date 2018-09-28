@@ -715,7 +715,7 @@ describe('lib/Watcher', () => {
         resolve();
       }));
 
-      await copy(caseRoot, tmpPath, 50);
+      await copy(caseRoot, tmpPath);
       await loader.load();
       await watcher.watchCollections();
 
